@@ -99,13 +99,13 @@ def nf_exec(cmd, args):
     DEVNULL = open(os.devnull, 'wb')
 
     if TESTMODE:
-        print "Command: %s (noop)" % command
+        print("Command: %s (noop)" % command)
         return False
 
     try:
         status = subprocess.call(command, stdout=DEVNULL, stderr=DEVNULL, shell=True)
     except:
-        print "Failed to execute iptables (%s)" % command
+        print("Failed to execute iptables (%s)" % command)
         sys.exit(1)
 
     if status:
@@ -340,37 +340,37 @@ def main():
     TESTMODE = options.test
 
     if not bool(options.apply) ^ bool(options.remove):
-        print "You are required to specify either --apply or --remove"
+        print("You are required to specify either --apply or --remove")
         sys.exit(1)
 
     if not bool(options.ssh) ^ bool(options.vpn):
-        print "You are required to specify either --ssh or --vpn"
+        print("You are required to specify either --ssh or --vpn")
         sys.exit(1)
 
     if options.ssh:
         if not options.user:
-            print "A username is required when using --ssh"
+            print("A username is required when using --ssh")
             sys.exit(1)
 
         try:
             mail = ldap_uid_to_mail(options.user)
         except:
-            print "Invalid ldap uid %s" % options.user
+            print("Invalid ldap uid %s" % options.user)
             sys.exit(1)
 
     if options.vpn:
         if not options.user:
-            print "A username (mail) is required when using --vpn"
+            print("A username (mail) is required when using --vpn")
             sys.exit(1)
 
         if not options.ip:
-            print "A source IP address is required when using --vpn"
+            print("A source IP address is required when using --vpn")
             sys.exit(1)
 
         try:
             mail = ldap_validate_mail(options.user)
         except:
-            print "Invalid LDAP user %s" % options.user
+            print("Invalid LDAP user %s" % options.user)
             sys.exit(1)
 
     if options.apply:
