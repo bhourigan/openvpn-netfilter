@@ -61,6 +61,12 @@ RULES='<%= confdir %>/plugins/netfilter/rules'
 TESTMODE=0
 MAXCOMMENTLEN=254
 
+def get_mode(options):
+	if options.ssh:
+		return "SSH"
+	if options.vpn:
+		return "OpenVPN"
+
 def log(msg):
 	"""
 		Send a message to syslog
@@ -69,20 +75,21 @@ def log(msg):
 	syslog.syslog(syslog.LOG_INFO, msg)
 	syslog.closelog()
 
-def cef(msg1, msg2):
+def cef(title, msg, ext):
 	"""
 		Build a log message in CEF format and send it to syslog
 	"""
 	syslog.openlog('OpenVPN', 0, CEF_FACILITY)
-	cefmsg = 'CEF:{v}|{deviceVendor}|{deviceProduct}|{deviceVersion}|{name}|{message}|{deviceSeverity}|{ext}'.format(
+	cefmsg = 'CEF:{v}|{deviceVendor}|{deviceProduct}|{deviceVersion}|{signatureID}|{name}|{message}|{deviceSeverity}|{extension}'.format(
 		v='0',
 		deviceVendor='Mozilla',
 		deviceProduct='OpenVPN',
 		deviceVersion='1.0',
-		name=msg1,
-		message=msg2,
+		signatureID='0',
+		name=title,
+		message=msg,
 		deviceSeverity='5',
-		ext=' dhost=' + NODENAME,
+		extension=ext+' dhost=' + NODENAME,
 	)
 	syslog.syslog(syslog.LOG_INFO, cefmsg)
 	syslog.closelog()
@@ -266,6 +273,7 @@ def netfilter_apply_rules(rules, mail, options):
 		comment = '%s @ %s' % (mail, options.ip)
 
 	if not TESTMODE and iptables_chain_exists(chain):
+		cef('Chain exists', Attempted to replace an existing chain. Failing.', 'suser=%s chain=%s mode=%s' % (mail, chain, get_mode(options)))
 		return
 
 	if len(comment) > MAXCOMMENTLEN:
@@ -375,7 +383,7 @@ def main():
 
 	if options.apply:
 		if not TESTMODE:
-			cef('User Login Successful|SSH user connected', 'mail=%s uid=%s' % (mail, options.user))
+			cef('User Login Successful', '%s endpoint connected' % get_mode(options), 'mail=%s uid=%s mode=%s' % (mail, options.user, get_mode(options)))
 
 		ldap_vpn_groups = ldap_query_vpn_groups(mail)
 		local_user_rules = local_query_user_rules(mail)
@@ -385,7 +393,7 @@ def main():
 
 	if options.remove:
 		if not TESTMODE:
-			cef('User Logout Successful|SSH user disconnected', 'mail=%s uid=%s' % (mail, options.user))
+			cef('User Logout Successful', '%s user disconnected' % get_mode(options), 'mail=%s uid=%s mode=%s' % (mail, options.user, get_mode(options)))
 
 		netfilter_remove_rules(mail, options)
 
