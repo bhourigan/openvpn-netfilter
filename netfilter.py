@@ -103,17 +103,19 @@ def nf_exec(cmd, args):
 		Abort (exit) on failure
 	"""
 	command = "%s %s" % (cmd, args)
-	devnull = open(os.devnull, 'wb')
 
 	if TESTMODE:
 		print("Command: %s (noop)" % command)
 		return False
 
+	devnull = open(os.devnull, 'wb')
 	try:
 		status = subprocess.call(command, stdout=devnull, stderr=devnull, shell=True)
 	except:
 		print("Failed to execute iptables (%s)" % command)
 		sys.exit(1)
+
+	os.close(devnull)
 
 	if status:
 		return False
