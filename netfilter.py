@@ -58,7 +58,7 @@ IPTABLES='/sbin/iptables'
 IPSET='/usr/sbin/ipset'
 RULESCLEANUP='<%= confdir %>/plugins/netfilter/vpn-netfilter-cleanup-ip.sh'
 RULES='<%= confdir %>/plugins/netfilter/rules'
-TESTMODE=0
+TESTMODE=False
 MAXCOMMENTLEN=254
 
 def get_mode(options):
@@ -96,21 +96,21 @@ def cef(title, msg, ext):
 
 def nf_exec(cmd, args):
 	"""
-		Execute a arbitrary command (iptables, ipset) with accompanying arguments
+		Execute either iptables or ipset with accompanying arguments
 		on the local system.
 
-		Abort (exit) on failed execution. If TESTMODE=True then it always returns
-		False
+		Return false in TESTMODE, True on success
+		Abort (exit) on failure
 	"""
 	command = "%s %s" % (cmd, args)
-	DEVNULL = open(os.devnull, 'wb')
+	devnull = open(os.devnull, 'wb')
 
 	if TESTMODE:
 		print("Command: %s (noop)" % command)
 		return False
 
 	try:
-		status = subprocess.call(command, stdout=DEVNULL, stderr=DEVNULL, shell=True)
+		status = subprocess.call(command, stdout=devnull, stderr=devnull, shell=True)
 	except:
 		print("Failed to execute iptables (%s)" % command)
 		sys.exit(1)
@@ -261,7 +261,7 @@ def netfilter_parse_network(group, networks, mail, options, chain, destinations)
 
 def netfilter_apply_rules(rules, mail, options):
 	"""
-		Apply "glue" rules and iteriate through the dict list that was pulled
+		Apply "glue" rules and iterate through the dict list that was pulled
 		from LDAP and built based on local files.
 	"""
 
